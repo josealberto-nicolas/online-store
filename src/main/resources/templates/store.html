@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TechNova - Tienda de Tecnología</title>
+    
+    <!-- Intentamos cargar Tailwind CSS (si falla, usaremos los estilos de abajo) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        
+        /* --- ESTILOS BASE / FALLBACK (Por si falla Tailwind) --- */
+        :root {
+            --primary-color: #2563eb; /* Azul */
+            --secondary-color: #dc2626; /* Rojo precios */
+            --bg-color: #f4f7f9;
+            --card-bg: #ffffff;
+            --text-main: #1f2937;
+            --text-light: #6b7280;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 20px;
+            color: var(--text-main);
+        }
+
+        /* Layout Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+
+        /* Header */
+        header {
+            text-align: center;
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            margin-bottom: 2rem;
+        }
+        header h1 { margin: 0; color: var(--primary-color); font-size: 2.5rem; }
+        header p { color: var(--text-light); margin-top: 0.5rem; }
+
+        /* Grid Layout manual por si falla CSS Grid de Tailwind */
+        .main-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2rem;
+        }
+        .catalog-col { flex: 2; min-width: 300px; }
+        .cart-col { flex: 1; min-width: 300px; }
+
+        /* Cards */
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .product-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid #e5e7eb;
+        }
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .product-card img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            background-color: #e5e7eb;
+        }
+        .price-tag { font-size: 1.5rem; font-weight: bold; color: var(--secondary-color); margin: 0.5rem 0; }
+
+        /* Botones */
+        button, .btn {
+            cursor: pointer;
+            border: none;
+            border-radius: 8px;
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            transition: opacity 0.2s;
+        }
+        button.add-btn { background-color: var(--primary-color); color: white; width: 100%; }
+        button.add-btn:hover { opacity: 0.9; }
+        
+        button.checkout-btn { 
+            background-color: #10b981; /* Verde */
+            color: white; 
+            width: 100%; 
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Carrito */
+        .cart-panel {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 20px;
+        }
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        .cart-total-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1.5rem;
+            padding-top: 1rem;
+            border-top: 2px dashed #e5e7eb;
+            font-size: 1.25rem;
+            font-weight: bold;
+        }
+
+        /* Alertas */
+        .alert { padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; border-left: 4px solid; }
+        .alert-success { background: #dcfce7; color: #166534; border-color: #22c55e; }
+        .alert-error { background: #fee2e2; color: #991b1b; border-color: #ef4444; }
+        .alert-info { background: #e0e7ff; color: #3730a3; border-color: #6366f1; }
+
+        /* Inputs */
+        input[type="number"] {
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            padding: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>TechNova Store</h1>
+        <p>Tu destino para la última tecnología.</p>
+    </header>
+
+    <!-- Sección de Mensajes -->
+    <div th:if="${success}" class="alert alert-success" role="alert">
+        <strong>¡Éxito!</strong> <span th:text="${success}"></span>
+    </div>
+    <div th:if="${error}" class="alert alert-error" role="alert">
+        <strong>Error:</strong> <span th:text="${error}"></span>
+    </div>
+
+    <!-- Confirmación de Pago Exitoso -->
+    <div th:if="${checkout_success}" class="alert alert-info" role="alert">
+        <h2 style="margin-top:0; font-size: 1.5rem;" th:text="${checkout_success}"></h2>
+        <div th:if="${order}" style="margin-top: 10px;">
+            <p><strong>Orden #:</strong> <span th:text="${order.id()}"></span></p>
+            <p><strong>Fecha:</strong> <span th:text="${#dates.format(order.orderDate(), 'dd-MM-yyyy HH:mm')}"></span></p>
+            <p><strong>Total Pagado:</strong> <span style="font-size: 1.2rem; font-weight:bold;" th:text="${#numbers.formatCurrency(order.totalAmount())}"></span></p>
+        </div>
+    </div>
+
+    <!-- Estructura Principal (Grid Manual + Tailwind clases) -->
+    <div class="main-grid grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <!-- Columna 1: Catálogo -->
+        <div class="catalog-col lg:col-span-2">
+            <h2 class="text-2xl font-semibold mb-4 border-b pb-2">Catálogo de Productos</h2>
+            
+            <div class="product-grid grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div th:each="product : ${products}" class="product-card">
+                    <!-- Imagen con fallback -->
+                    <img th:src="${product.imageUrl()}" 
+                         th:alt="${product.name()}" 
+                         onerror="this.onerror=null; this.src='https://placehold.co/600x400/e2e8f0/475569?text=No+Image';"/>
+                    
+                    <div style="flex-grow: 1;">
+                        <h3 class="text-lg font-bold" th:text="${product.name()}"></h3>
+                        <p class="price-tag" th:text="${#numbers.formatCurrency(product.price())}"></p>
+                        <p class="text-gray-500 text-sm mb-4" th:text="${product.description()}"></p>
+                    </div>
+
+                    <form th:action="@{/add}" method="post" style="margin-top: auto; display: flex; gap: 10px;">
+                        <input type="hidden" name="productId" th:value="${product.id()}" />
+                        <input type="number" name="quantity" value="1" min="1" style="width: 60px;" required />
+                        <button type="submit" class="add-btn">Añadir</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Columna 2: Carrito -->
+        <div class="cart-col lg:col-span-1">
+            <div class="cart-panel">
+                <h2 class="text-2xl font-semibold mb-4 border-b pb-2">Tu Carrito</h2>
+                
+                <div th:if="${cartItems.isEmpty()}" style="text-align: center; padding: 2rem; color: #9ca3af;">
+                    <p>Tu carrito está vacío.</p>
+                </div>
+
+                <div th:unless="${cartItems.isEmpty()}">
+                    <div th:each="item : ${cartItems}" class="cart-item">
+                        <div style="flex-grow: 1; padding-right: 10px;">
+                            <div style="font-weight: 600;" th:text="${item.product.name()}"></div>
+                            <div style="font-size: 0.85rem; color: #6b7280;" th:text="${#numbers.formatCurrency(item.product.price())}"></div>
+                        </div>
+                        
+                        <form th:action="@{/update}" method="post" style="display: flex; align-items: center; gap: 5px;">
+                            <input type="hidden" name="productId" th:value="${item.product.id()}" />
+                            <input type="number" name="quantity" th:value="${item.quantity}" min="0" style="width: 50px; text-align: center;" onchange="this.form.submit()" />
+                        </form>
+                        
+                        <div style="font-weight: bold; min-width: 80px; text-align: right;" th:text="${#numbers.formatCurrency(item.totalPrice)}"></div>
+                    </div>
+
+                    <div class="cart-total-row">
+                        <span>Total:</span>
+                        <span style="color: var(--secondary-color);" th:text="${#numbers.formatCurrency(cartTotal)}"></span>
+                    </div>
+
+                    <form th:action="@{/checkout}" method="post" style="margin-top: 1.5rem;">
+                        <button type="submit" class="checkout-button checkout-btn">
+                            Simular Pago
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
