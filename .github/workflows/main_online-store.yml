@@ -5,9 +5,9 @@ name: Build and deploy JAR app to Azure Web App - online-store
 
 on:
   push:
-    branches:
-      - main
-  workflow_dispatch:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
 
 jobs:
   build:
@@ -60,4 +60,5 @@ jobs:
           app-name: 'online-store'
           slot-name: 'Production'
           package: '*.jar'
+
           
